@@ -33,5 +33,12 @@ def main():
     embedd.set_transform(openai_helper.transform_query)
     print(embedd.search("select * from txtai where filename in ('file') and similar('Northeast state with lobster') and score >= 0.15"))
 
+def process(data, query):
+    embedd = EmbeddingsWrapper(transform=openai_helper.transform)
+    embedd.create_index(data)
+    embedd.set_transform(openai_helper.transform_query)
+    print(embedd.search(f"select * from txtai where filename in ('file') and similar('{query}') and score >= 0.15"))
+
+
 if __name__ == "__main__":
     main()

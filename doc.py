@@ -1,15 +1,7 @@
-# nyi
-
-from txtai.embeddings import Embeddings
-import openai
 from pydantic import BaseModel
 from typing import List, Optional
-
-openai.api_key = ""
-
-# Create embeddings index with content enabled. The default behavior is to only store indexed vectors.
-embeddings = Embeddings(
-    {"path": "sentence-transformers/nli-mpnet-base-v2", "content": True, "objects": True})
+from io_helper import read_text
+from txtai_helper import process
 
 class Document(BaseModel):
     filename: str
@@ -22,15 +14,6 @@ class Document(BaseModel):
         pass
         # self.clean_text = run_all(text=self.raw_text)
         # return self
-
-    def chunk(self):
-        """
-        Parses a document into chunks no smaller than min_chunk_length
-        and no larger than max_chunk_length.
-        Attempts to not break sentences or paragraphs.
-        """
-        self.chunks = self.raw_text.split("\n\n")
-        return self
 
     def advanced_chunk(self, min_chunk_length: int, max_chunk_length: int, silent=True):
         """
@@ -94,20 +77,35 @@ class Document(BaseModel):
 
         return self
 
-    def embed(self):
-        '''
-        Create embeddings for each chunk
-        '''
-        embeddings.index([(uid, text, None)
-                         for uid, text in enumerate(self.chunks)])
-        # Save the index
-        embeddings.save(self.index_name)
-
     def to_json(self):
         return {
             'filename': self.filename,
             'index_name': self.index_name,
             'raw_text': self.raw_text,
             'clean_text': self.clean_text,
-            'chunks': self.chunks
+            'chunks': self.chunks,
+            'chunks_length': len(self.chunks)
         }
+
+    def to_txtai_format(self):
+        txtai_formatted = []
+        for chunk in self.chunks:
+            txtai_formatted.append({
+            'text': chunk,
+            'filename': self.filename
+        })
+        return txtai_formatted
+         
+
+def main():
+    content = read_text('./files/daily.md')
+    # print(content)
+
+    doc = Document(filename='file', index_name='index', raw_text=content)
+    doc.advanced_chunk(min_chunk_length=200, max_chunk_length=300)
+    # print(doc.to_json()['chunks'])
+    # print(doc.to_txtai_format())
+    process(doc.to_txtai_format(), 'hibiscus')
+
+if __name__ == "__main__":
+    main()
