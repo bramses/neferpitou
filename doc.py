@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from io_helper import read_text
 from txtai_helper import process
+from batch import insert_batches
 
 class Document(BaseModel):
     filename: str
@@ -101,11 +102,14 @@ def main():
     content = read_text('./files/daily.md')
     # print(content)
 
-    doc = Document(filename='file', index_name='index', raw_text=content)
-    doc.advanced_chunk(min_chunk_length=200, max_chunk_length=300)
-    # print(doc.to_json()['chunks'])
-    # print(doc.to_txtai_format())
-    process(doc.to_txtai_format(), 'hibiscus')
+    doc = Document(filename='daily.md', index_name='index', raw_text=content)
+    doc.advanced_chunk(min_chunk_length=20, max_chunk_length=30)
+    # print(doc.to_json())
+    txtai_fomatted = doc.to_txtai_format()
+    batches = insert_batches('index', records=txtai_fomatted)
+    # print(list(list(batches)[0]))
+    # process(doc.to_txtai_format(), 'scoop', 'daily.md')
+    process(list(list(batches)[0]), 'latitude', 'daily.md')
 
 if __name__ == "__main__":
     main()
