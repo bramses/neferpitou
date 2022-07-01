@@ -7,7 +7,7 @@ load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def transform(inputs):
+def transform(inputs, DEBUG=False):
     print(inputs)
     clean_inputs = []
     for input in inputs:
@@ -18,8 +18,9 @@ def transform(inputs):
         engine="text-search-ada-doc-001"
     )
 
-    print(response.model)
-    print(response.usage)
+    if DEBUG:
+        print(response.model)
+        print(response.usage)
 
     return np.array([x.embedding for x in response.data], dtype=np.float32)
 
