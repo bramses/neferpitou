@@ -5,19 +5,21 @@ from txtai_helper import process
 from batch import insert_batches
 import json
 
+
 class Document():
 
-    def __init__(self, filename="", raw_text=""):
-       print("Initializing Document object ...")
-       print('filename: ' + filename)
-       print('raw_text: ' + raw_text)
-       self.filename = filename
-       self.raw_text = raw_text
-       self.advanced_chunk(min_chunk_length=10, max_chunk_length=100)
-       self.txtai_formatted_chunks = self.to_txtai_format()
-       
+    def __init__(self, filename="", min_chunk_length = 7000, max_chunk_length=8000, DEBUG=False):
+        print("Initializing Document object ...")
+        if filename == "":
+            raise Exception("Filename is required")
 
-    def advanced_chunk(self, min_chunk_length: int, max_chunk_length: int, silent=True):
+        self.filename = filename
+        file_content = read_text(filename)
+        self.raw_text = file_content
+        self.advanced_chunk(min_chunk_length=min_chunk_length, max_chunk_length=max_chunk_length, debug=DEBUG)
+        self.txtai_formatted_chunks = self.to_txtai_format()
+
+    def advanced_chunk(self, min_chunk_length, max_chunk_length, debug=False):
         """
         Parses a document into chunks no smaller than min_chunk_length
         and no larger than max_chunk_length.
@@ -37,13 +39,13 @@ class Document():
                 if char in '.!?':
                     # if it is, keep the character in the current chunk
                     chunks.append(current_chunk)
-                    if not silent:
+                    if debug:
                         print("The current chunk:\n" + current_chunk)
                     current_chunk = ''
                 else:
                     # otherwise, put the character in the next chunk
                     chunks.append(current_chunk[:-1])
-                    if not silent:
+                    if debug:
                         print("The current chunk:\n" + current_chunk[:-1])
                     current_chunk = char
             # if the current chunk is too small,
@@ -51,13 +53,13 @@ class Document():
             elif len(current_chunk) >= min_chunk_length and char == ' ':
                 # if it is, keep the character in the current chunk
                 chunks.append(current_chunk)
-                if not silent:
+                if debug:
                     print("The current chunk:\n" + current_chunk)
                 current_chunk = ''
         # if there is a leftover chunk, add it to the list of chunks
         if current_chunk:
             chunks.append(current_chunk)
-            if not silent:
+            if debug:
                 print("The current chunk:\n" + current_chunk)
         self.chunks = chunks
         return self
@@ -74,23 +76,21 @@ class Document():
         txtai_formatted = []
         for chunk in self.chunks:
             txtai_formatted.append({
-            'text': chunk,
-            'filename': self.filename
-        })
+                'text': chunk,
+                'filename': self.filename
+            })
         return txtai_formatted
-         
+
 
 def main():
-    content = read_text('./files/daily.md')
-    doc = Document(filename='daily.md', raw_text=content)
-    print(doc.to_json())
-    # doc.advanced_chunk(min_chunk_length=2000, max_chunk_length=3000)
+    doc = Document(filename='./files/daily.md')
+    print(doc.txtai_formatted_chunks)
 
     # content2 = read_text('./files/The lens through which your brain views the world shapes your reality.md')
     # doc2 = Document(filename='The lens through which your brain views the world shapes your reality.md', index_name='index', raw_text=content2)
     # doc2.advanced_chunk(min_chunk_length=2000, max_chunk_length=3000)
     # txtai_fomatted_doc2 = doc2.to_txtai_format()
-    
+
     # txtai_fomatted = doc.to_txtai_format()
     # joined = txtai_fomatted + txtai_fomatted_doc2
     # qry = 'frozen summer treat'
@@ -105,6 +105,7 @@ def main():
     # top_doc_json = top_doc_intra.to_txtai_format()
     # processed_top_doc = process(top_doc_json, qry, 'daily.md')
     # print(processed_top_doc)
+
 
 if __name__ == "__main__":
     main()
