@@ -113,7 +113,6 @@ def main():
 
     
     embedd = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
-
     index = embedd.load_index('index.txtai')
 
     if not index:
@@ -139,10 +138,20 @@ def main():
     all = embedd.search("select * from txtai limit 100")
     [print(f"{doc['id']} {doc['text']}") for doc in all]
 
-def process(data, query, filename, transform=openai_helper.transform):
-    embedd = EmbeddingsWrapper(transform=transform)
-    embedd.create_index(data)
-    embedd.set_transform(openai_helper.transform_query)
+
+def process_top_documents(top_documents, query):
+    embedd = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
+    embedd.create_index(top_documents)
+    return embedd.search(query)
+
+def process(data, query):
+    embedd = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
+    index = embedd.load_index('mdtest.txtai')
+
+    if not index:
+        embedd.create_index(data)
+        embedd.save_index("mdtest.txtai")
+    
     return embedd.search(f"select * from txtai where similar('{query}') and score >= 0.01")
 
 

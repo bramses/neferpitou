@@ -7,8 +7,11 @@ load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def transform(inputs, DEBUG=False):
-    print(inputs)
+def transform(inputs, DEBUG=True):
+
+    if DEBUG:
+        print(f"--OPENAI-- transforming {inputs}")
+
     clean_inputs = []
     for input in inputs:
         clean_inputs.append(clean_text(input))
@@ -24,7 +27,10 @@ def transform(inputs, DEBUG=False):
 
     return np.array([x.embedding for x in response.data], dtype=np.float32)
 
-def transform_query(inputs):
+def transform_query(inputs, DEBUG=True):
+    if DEBUG:
+        print(f"--OPENAI-- transforming query {inputs}")
+    
     clean_inputs = []
     for inp in inputs:
         clean_inputs.append(clean_text(inp))
@@ -33,6 +39,10 @@ def transform_query(inputs):
         input=clean_inputs,
         engine="text-search-ada-query-001"
     )
+
+    if DEBUG:
+        print(response.model)
+        print(response.usage)
 
     return np.array([x.embedding for x in response.data], dtype=np.float32)
 

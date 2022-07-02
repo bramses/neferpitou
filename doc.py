@@ -1,5 +1,5 @@
 from io_helper import read_text
-from txtai_helper import process
+from txtai_helper import process, process_top_documents
 from batch import insert_batches
 import json
 import textwrap
@@ -7,7 +7,7 @@ import textwrap
 
 class Document():
 
-    def __init__(self, filename="", chunk_length = 20, DEBUG=False):
+    def __init__(self, filename="", chunk_length = 7500, DEBUG=False):
         print("Initializing Document object ...")
         if filename == "":
             raise Exception("Filename is required")
@@ -40,28 +40,20 @@ class Document():
 
 
 def main():
-    doc = Document(filename='./files/daily.md')
-    print(doc.txtai_formatted_chunks)
+    doc = Document(filename='./files/daily.md', chunk_length=7500)
+    doc2 = Document(filename='./files/The lens through which your brain views the world shapes your reality.md', chunk_length=7500)
+    joined = doc.txtai_formatted_chunks + doc2.txtai_formatted_chunks
+    
+    qry = 'who was the scientist from world war ii'
+    batches = insert_batches('index', records=joined)
+    
+    top_doc = process(list(list(batches)[0]), qry)
 
-    # content2 = read_text('./files/The lens through which your brain views the world shapes your reality.md')
-    # doc2 = Document(filename='The lens through which your brain views the world shapes your reality.md', index_name='index', raw_text=content2)
-    # doc2.advanced_chunk(min_chunk_length=2000, max_chunk_length=3000)
-    # txtai_fomatted_doc2 = doc2.to_txtai_format()
+    top_doc_data = json.loads(top_doc[0]['data'])
+    top_doc_intra = Document(filename=top_doc_data['filename'], chunk_length=400)
 
-    # txtai_fomatted = doc.to_txtai_format()
-    # joined = txtai_fomatted + txtai_fomatted_doc2
-    # qry = 'frozen summer treat'
-    # batches = insert_batches('index', records=joined)
-    # top_doc = process(list(list(batches)[0]), qry, 'daily.md')[0]
-
-    # top_doc_data = json.loads(top_doc['data'])
-
-    # top_doc_intra = Document(filename=top_doc_data['filename'], index_name='index', raw_text=top_doc_data['text'])
-    # top_doc_intra.advanced_chunk(min_chunk_length=20, max_chunk_length=30)
-
-    # top_doc_json = top_doc_intra.to_txtai_format()
-    # processed_top_doc = process(top_doc_json, qry, 'daily.md')
-    # print(processed_top_doc)
+    processed_top_doc = process_top_documents(top_doc_intra.txtai_formatted_chunks, qry)
+    print(processed_top_doc)
 
 
 if __name__ == "__main__":
