@@ -7,7 +7,7 @@ import textwrap
 
 class Document():
 
-    def __init__(self, filename="", min_chunk_length = 20, max_chunk_length=20, DEBUG=False):
+    def __init__(self, filename="", chunk_length = 20, DEBUG=False):
         print("Initializing Document object ...")
         if filename == "":
             raise Exception("Filename is required")
@@ -16,7 +16,7 @@ class Document():
         file_content = read_text(filename)
         self.raw_text = file_content
         # self.advanced_chunk(min_chunk_length=min_chunk_length, max_chunk_length=max_chunk_length, debug=DEBUG)
-        self.chunks = self.wrap(file_content, 2000).split('\n')
+        self.chunks = self.wrap(file_content, chunk_length).split('\n')
         self.txtai_formatted_chunks = self.to_txtai_format()
 
     def wrap(self, s, w):
