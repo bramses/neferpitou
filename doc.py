@@ -15,57 +15,11 @@ class Document():
         self.filename = filename
         file_content = read_text(filename)
         self.raw_text = file_content
-        # self.advanced_chunk(min_chunk_length=min_chunk_length, max_chunk_length=max_chunk_length, debug=DEBUG)
         self.chunks = self.wrap(file_content, chunk_length).split('\n')
         self.txtai_formatted_chunks = self.to_txtai_format()
 
     def wrap(self, s, w):
         return textwrap.fill(s, w)
-
-    def advanced_chunk(self, min_chunk_length, max_chunk_length, debug=False):
-        """
-        Parses a document into chunks no smaller than min_chunk_length
-        and no larger than max_chunk_length.
-        Attempts to not break sentences or paragraphs.
-        Uses raw_text if clean_text is not available.
-        """
-        chunks = []
-        current_chunk = ''
-
-        raw_text = self.raw_text
-
-        for i, char in enumerate(raw_text):
-            current_chunk += char
-            if len(current_chunk) >= max_chunk_length:
-                # if the current chunk is too large,
-                # check if the next character is a sentence terminator
-                if char in '.!?':
-                    # if it is, keep the character in the current chunk
-                    chunks.append(current_chunk)
-                    if debug:
-                        print("The current chunk:\n" + current_chunk)
-                    current_chunk = ''
-                else:
-                    # otherwise, put the character in the next chunk
-                    chunks.append(current_chunk[:-1])
-                    if debug:
-                        print("The current chunk:\n" + current_chunk[:-1])
-                    current_chunk = char
-            # if the current chunk is too small,
-            # check if the next character is a space
-            elif len(current_chunk) >= min_chunk_length and char == ' ':
-                # if it is, keep the character in the current chunk
-                chunks.append(current_chunk)
-                if debug:
-                    print("The current chunk:\n" + current_chunk)
-                current_chunk = ''
-        # if there is a leftover chunk, add it to the list of chunks
-        if current_chunk:
-            chunks.append(current_chunk)
-            if debug:
-                print("The current chunk:\n" + current_chunk)
-        self.chunks = chunks
-        return self
 
     def to_json(self):
         return {
