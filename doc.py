@@ -5,17 +5,17 @@ from txtai_helper import process
 from batch import insert_batches
 import json
 
-class Document(BaseModel):
-    filename: str
-    index_name: str
-    raw_text: str
-    clean_text: Optional[str] = None
-    chunks: Optional[List[str]] = None
+class Document():
 
-    def clean(self):
-        pass
-        # self.clean_text = run_all(text=self.raw_text)
-        # return self
+    def __init__(self, filename="", raw_text=""):
+       print("Initializing Document object ...")
+       print('filename: ' + filename)
+       print('raw_text: ' + raw_text)
+       self.filename = filename
+       self.raw_text = raw_text
+       self.advanced_chunk(min_chunk_length=10, max_chunk_length=100)
+       self.txtai_formatted_chunks = self.to_txtai_format()
+       
 
     def advanced_chunk(self, min_chunk_length: int, max_chunk_length: int, silent=True):
         """
@@ -27,12 +27,7 @@ class Document(BaseModel):
         chunks = []
         current_chunk = ''
 
-        raw_text = None
-        if self.clean_text is None:
-            raw_text = self.raw_text
-        else:
-            print('text is clean, using clean text')
-            raw_text = self.clean_text
+        raw_text = self.raw_text
 
         for i, char in enumerate(raw_text):
             current_chunk += char
@@ -70,9 +65,7 @@ class Document(BaseModel):
     def to_json(self):
         return {
             'filename': self.filename,
-            'index_name': self.index_name,
             'raw_text': self.raw_text,
-            'clean_text': self.clean_text,
             'chunks': self.chunks,
             'chunks_length': len(self.chunks)
         }
@@ -89,28 +82,29 @@ class Document(BaseModel):
 
 def main():
     content = read_text('./files/daily.md')
-    doc = Document(filename='daily.md', index_name='index', raw_text=content)
-    doc.advanced_chunk(min_chunk_length=2000, max_chunk_length=3000)
+    doc = Document(filename='daily.md', raw_text=content)
+    print(doc.to_json())
+    # doc.advanced_chunk(min_chunk_length=2000, max_chunk_length=3000)
 
-    content2 = read_text('./files/The lens through which your brain views the world shapes your reality.md')
-    doc2 = Document(filename='The lens through which your brain views the world shapes your reality.md', index_name='index', raw_text=content2)
-    doc2.advanced_chunk(min_chunk_length=2000, max_chunk_length=3000)
-    txtai_fomatted_doc2 = doc2.to_txtai_format()
+    # content2 = read_text('./files/The lens through which your brain views the world shapes your reality.md')
+    # doc2 = Document(filename='The lens through which your brain views the world shapes your reality.md', index_name='index', raw_text=content2)
+    # doc2.advanced_chunk(min_chunk_length=2000, max_chunk_length=3000)
+    # txtai_fomatted_doc2 = doc2.to_txtai_format()
     
-    txtai_fomatted = doc.to_txtai_format()
-    joined = txtai_fomatted + txtai_fomatted_doc2
-    qry = 'frozen summer treat'
-    batches = insert_batches('index', records=joined)
-    top_doc = process(list(list(batches)[0]), qry, 'daily.md')[0]
+    # txtai_fomatted = doc.to_txtai_format()
+    # joined = txtai_fomatted + txtai_fomatted_doc2
+    # qry = 'frozen summer treat'
+    # batches = insert_batches('index', records=joined)
+    # top_doc = process(list(list(batches)[0]), qry, 'daily.md')[0]
 
-    top_doc_data = json.loads(top_doc['data'])
+    # top_doc_data = json.loads(top_doc['data'])
 
-    top_doc_intra = Document(filename=top_doc_data['filename'], index_name='index', raw_text=top_doc_data['text'])
-    top_doc_intra.advanced_chunk(min_chunk_length=20, max_chunk_length=30)
+    # top_doc_intra = Document(filename=top_doc_data['filename'], index_name='index', raw_text=top_doc_data['text'])
+    # top_doc_intra.advanced_chunk(min_chunk_length=20, max_chunk_length=30)
 
-    top_doc_json = top_doc_intra.to_txtai_format()
-    processed_top_doc = process(top_doc_json, qry, 'daily.md')
-    print(processed_top_doc)
+    # top_doc_json = top_doc_intra.to_txtai_format()
+    # processed_top_doc = process(top_doc_json, qry, 'daily.md')
+    # print(processed_top_doc)
 
 if __name__ == "__main__":
     main()
