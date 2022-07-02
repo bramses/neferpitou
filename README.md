@@ -11,3 +11,5 @@ openai embeddings + txtai + obsidian + github actions = <3
 - [ ] chunk data into token limit
 - [ ] api
 - [ ] hosting
+- [ ] pagination
+    search_results = self.embeddings.search(f"select * from txtai where filename in ('{filename}') limit 100 offset ??")

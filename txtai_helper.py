@@ -6,6 +6,7 @@ class EmbeddingsWrapper:
     def __init__(self, transform=openai_helper.transform, content=True, objects=True, DEBUG=False):
         self.embeddings =  Embeddings({ "method": "external", "transform": transform, "content": content, "objects": objects })
         self.debug = DEBUG
+        self.limit = 1000
 
     def get_embeddings(self):
         if self.debug:
@@ -17,10 +18,10 @@ class EmbeddingsWrapper:
             print(f"--TXTAI-- setting transform to {transform}")
         self.embeddings.config['transform'] = transform
 
-    def create_index(self, documents):
+    def create_index(self, documents, tags=None):
         if self.debug:
             print(f"--TXTAI-- creating index with {len(documents)} documents")
-        return self.embeddings.index([(uid, { "text": val['text'], "filename": val['filename'] }, None) for uid, val in enumerate(documents)])
+        return self.embeddings.index([(uid, { "text": val['text'], "filename": val['filename'] }, tags) for uid, val in enumerate(documents)])
         
     def search(self, query, n=1):
         if self.debug:
@@ -31,16 +32,25 @@ class EmbeddingsWrapper:
         if self.debug:
             print(f"--TXTAI-- saving index to {path}")
         self.embeddings.save(path)
+
+    def info(self):
+        if self.debug:
+            print(f"--TXTAI-- getting info")
+        return self.embeddings.info()
     
     def load_index(self, path):
         if self.debug:
             print(f"--TXTAI-- loading index from {path}")
+        if not self.exists(path):
+            return False
         self.embeddings.load(path)
 
-    def upsert_index(self, documents):
+    def upsert_index(self, documents, tags=None):
         if self.debug:
             print(f"--TXTAI-- upserting index with {len(documents)} documents")
-        self.embeddings.upsert([(uid, { "text": val['text'], "filename": val['filename'] }, None) for uid, val in enumerate(documents)])
+        
+
+        self.embeddings.upsert([(val['indexid'], { "text": val['text'], "filename": val['filename'] }, tags) for uid, val in enumerate(documents)])
 
     def delete_ids(self, ids):
         if self.debug:
@@ -51,18 +61,37 @@ class EmbeddingsWrapper:
         if self.debug:
             print(f"--TXTAI-- finding ids by filename {filename}")
 
-        if not self.embeddings.exists('index.txtai'):
-            print(f"--TXTAI-- index does not exist")
-            return []
+        search_results = self.embeddings.search(f"select * from txtai where filename in ('{filename}') limit {self.limit}")
+        
+        if self.debug:
+            print(f"--TXTAI-- search results: {search_results}")
+            print([result['id'] for result in search_results])
 
-
-        search_results = self.embeddings.search(f"select * from txtai where filename in ('{filename}')")
-        print(f"--TXTAI-- search results: {search_results}")
+        return search_results
 
     def exists(self, path):
         if self.debug:
             print(f"--TXTAI-- checking if index exists")
         return self.embeddings.exists(path)
+
+    def update_documents_text(self, documents, new_text):
+        if len(documents) != len(new_text):
+            raise Exception("Number of documents and new text must be the same")
+        updated_documents = []
+        if self.debug:
+            print(f"--TXTAI-- updating document text")
+        
+        idx = 0
+        for document in documents:
+            if self.debug:
+                print(f"--TXTAI-- updating document {document['indexid']}")
+            data = json.loads(document['data'])
+            updated_documents.append({ "indexid": document['indexid'], "text": new_text[idx], "filename": data['filename'] })
+            idx += 1
+
+        return updated_documents
+
+
 
 def main():
     data = [{ "text": "US tops 5 million confirmed virus cases", "filename": 'file1' },
@@ -75,16 +104,28 @@ def main():
 
     
     embedd = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
-    
+
     if embedd.exists('index.txtai'):
+        print("--TXTAI-- index exists")
         embedd.load_index('index.txtai')
     else:
         embedd.create_index(data)
-    # embedd.save_index("index.txtai")
+        embedd.save_index("index.txtai")
 
-    embedd.find_ids_by_filename('file')
-    # embedd.set_transform(openai_helper.transform_query)
-    # print(embedd.search("select * from txtai where filename in ('file') and similar('Northeast state with lobster') and score >= 0.15"))
+    # embedd.info()
+
+    ids = embedd.find_ids_by_filename('file')
+    # print(f"--TXTAI-- ids: {ids}")
+    # embedd.delete_ids([3])
+    # embedd.save_index("index.txtai")
+    embedd.set_transform(openai_helper.transform_query)
+    print(embedd.search("select * from txtai where filename in ('file') and similar('what to do in a polar bear attack') and score >= 0.15"))
+
+    docs_to_update = embedd.search("select * from txtai where id = 1")
+    docs_to_update = embedd.update_documents_text(docs_to_update, ['polar bear chases school'])
+
+    print(f"--TXTAI-- docs to update: {docs_to_update}")
+    # embedd.upsert_index(doc_to_update)
 
 def process(data, query, filename, transform=openai_helper.transform):
     embedd = EmbeddingsWrapper(transform=transform)
