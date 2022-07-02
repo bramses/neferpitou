@@ -134,8 +134,10 @@ def main():
     embedd.upsert_index(docs_to_update)
 
     
-    print(embedd.search("select * from txtai where filename in ('file') and similar('savings account') and score >= 0.15"))
+    # print(embedd.search("select * from txtai where filename in ('file') and similar('savings account') and score >= 0.15"))
 
+    all = embedd.search("select * from txtai limit 100")
+    [print(f"{doc['id']} {doc['text']}") for doc in all]
 
 def process(data, query, filename, transform=openai_helper.transform):
     embedd = EmbeddingsWrapper(transform=transform)
