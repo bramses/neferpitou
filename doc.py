@@ -1,5 +1,3 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from io_helper import read_text
 from txtai_helper import process
 from batch import insert_batches
