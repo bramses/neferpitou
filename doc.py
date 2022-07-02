@@ -2,6 +2,7 @@ from io_helper import read_text
 from txtai_helper import process
 from batch import insert_batches
 import json
+import textwrap
 
 
 class Document():
@@ -14,8 +15,12 @@ class Document():
         self.filename = filename
         file_content = read_text(filename)
         self.raw_text = file_content
-        self.advanced_chunk(min_chunk_length=min_chunk_length, max_chunk_length=max_chunk_length, debug=DEBUG)
+        # self.advanced_chunk(min_chunk_length=min_chunk_length, max_chunk_length=max_chunk_length, debug=DEBUG)
+        self.chunks = self.wrap(file_content, 2000).split('\n')
         self.txtai_formatted_chunks = self.to_txtai_format()
+
+    def wrap(self, s, w):
+        return textwrap.fill(s, w)
 
     def advanced_chunk(self, min_chunk_length, max_chunk_length, debug=False):
         """
