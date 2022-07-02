@@ -6,7 +6,7 @@ import json
 
 class Document():
 
-    def __init__(self, filename="", min_chunk_length = 7000, max_chunk_length=8000, DEBUG=False):
+    def __init__(self, filename="", min_chunk_length = 20, max_chunk_length=20, DEBUG=False):
         print("Initializing Document object ...")
         if filename == "":
             raise Exception("Filename is required")
