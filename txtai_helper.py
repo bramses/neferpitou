@@ -50,6 +50,7 @@ class EmbeddingsWrapper:
         if self.debug:
             print(f"--TXTAI-- index exists")
         self.embeddings.load(path)
+    
         return True
 
     def upsert_index(self, documents, tags=None, transform=openai_helper.transform):
@@ -64,7 +65,7 @@ class EmbeddingsWrapper:
     def delete_ids(self, ids):
         if self.debug:
             print(f"--TXTAI-- deleting ids {ids}")
-        self.embeddings.delete(ids)
+        return self.embeddings.delete(ids)
 
     def find_ids_by_filename(self, filename):
         if self.debug:
@@ -73,8 +74,7 @@ class EmbeddingsWrapper:
         search_results = self.embeddings.search(f"select * from txtai where filename in ('{filename}') limit {self.limit}")
         
         if self.debug:
-            print(f"--TXTAI-- search results: {search_results}")
-            print([result['id'] for result in search_results])
+            print(f"--TXTAI-- ids: {[result['id'] for result in search_results]}")
 
         return search_results
 
