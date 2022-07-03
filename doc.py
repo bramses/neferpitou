@@ -1,8 +1,6 @@
 from io_helper import read_text
-from txtai_helper import process, process_top_documents
-from batch import insert_batches
-import json
 import textwrap
+from uuid import uuid4
 
 
 class Document():
@@ -17,6 +15,7 @@ class Document():
         self.raw_text = file_content
         self.chunks = self.wrap(file_content, chunk_length).split('\n')
         self.txtai_formatted_chunks = self.to_txtai_format()
+        self.uuid = str(uuid4())
 
     def wrap(self, s, w):
         return textwrap.fill(s, w)
@@ -26,7 +25,8 @@ class Document():
             'filename': self.filename,
             'raw_text': self.raw_text,
             'chunks': self.chunks,
-            'chunks_length': len(self.chunks)
+            'chunks_length': len(self.chunks),
+            'uuid': self.uuid
         }
 
     def to_txtai_format(self):
@@ -34,27 +34,7 @@ class Document():
         for chunk in self.chunks:
             txtai_formatted.append({
                 'text': chunk,
-                'filename': self.filename
+                'filename': self.filename,
+                'chunk_uuid': str(uuid4())
             })
         return txtai_formatted
-
-
-def main():
-    doc = Document(filename='./files/daily.md', chunk_length=7500)
-    doc2 = Document(filename='./files/The lens through which your brain views the world shapes your reality.md', chunk_length=7500)
-    joined = doc.txtai_formatted_chunks + doc2.txtai_formatted_chunks
-    
-    qry = 'who was the scientist from world war ii'
-    batches = insert_batches('index', records=joined)
-    
-    top_doc = process(list(list(batches)[0]), qry)
-
-    top_doc_data = json.loads(top_doc[0]['data'])
-    top_doc_intra = Document(filename=top_doc_data['filename'], chunk_length=400)
-
-    processed_top_doc = process_top_documents(top_doc_intra.txtai_formatted_chunks, qry)
-    print(processed_top_doc)
-
-
-if __name__ == "__main__":
-    main()

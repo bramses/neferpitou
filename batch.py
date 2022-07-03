@@ -17,6 +17,6 @@ def insert_batches(index, records):
     idx = 0
     for ids_vectors_chunk in chunks(records, batch_size=32):
         print("Inserting batch #%s of records ..." % idx)
-        # print(ids_vectors_chunk)
+        print(len(ids_vectors_chunk))
         yield ids_vectors_chunk
         idx += 1

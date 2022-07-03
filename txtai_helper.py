@@ -21,7 +21,7 @@ class EmbeddingsWrapper:
     def create_index(self, documents, tags=None):
         if self.debug:
             print(f"--TXTAI-- creating index with {len(documents)} documents")
-        return self.embeddings.index([(uid, { "text": val['text'], "filename": val['filename'] }, tags) for uid, val in enumerate(documents)])
+        return self.embeddings.index([(val['chunk_uuid'] if val.__contains__('chunk_uuid') else uid, { "text": val['text'], "filename": val['filename'] }, tags) for uid, val in enumerate(documents)])
         
     def search(self, query, n=1, transform=openai_helper.transform_query):
         if self.debug:
@@ -54,12 +54,12 @@ class EmbeddingsWrapper:
 
     def upsert_index(self, documents, tags=None, transform=openai_helper.transform):
         if self.debug:
-            print(f"--TXTAI-- upserting index with document ids {[doc['indexid'] for doc in documents]}")
+            print(f"--TXTAI-- upserting index with document ids {[doc['chunk_uuid'] for doc in documents]}")
 
         if transform:
             self.set_transform(transform)
 
-        self.embeddings.upsert([(val['indexid'], { "text": val['text'], "filename": val['filename'] }, tags) for uid, val in enumerate(documents)])
+        self.embeddings.upsert([(val['chunk_uuid'], { "text": val['text'], "filename": val['filename'] }, tags) for uid, val in enumerate(documents)])
 
     def delete_ids(self, ids):
         if self.debug:
@@ -99,61 +99,3 @@ class EmbeddingsWrapper:
             idx += 1
 
         return updated_documents
-
-
-
-def main():
-    data = [{ "text": "US tops 5 million confirmed virus cases", "filename": 'file1' },
-         { "text": "Canada's last fully intact ice shelf has suddenly collapsed, forming a Manhattan-sized iceberg", "filename": 'file' },
-         { "text": "Beijing mobilises invasion craft along coast as Taiwan tensions escalate", "filename": 'file1' },
-         { "text": "The National Park Service warns against sacrificing slower friends in a bear attack", "filename": 'file' },
-         { "text": "Maine man wins $10M from $25 lottery ticket", "filename": 'file' },
-         { "text": "Make huge profits without work, earn up to $100,000 a day", "filename": 'file' }]
-    
-
-    
-    embedd = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
-    index = embedd.load_index('index.txtai')
-
-    if not index:
-        embedd.create_index(data)
-        embedd.save_index("index.txtai")
-
-    # embedd.info()
-
-    # ids = embedd.find_ids_by_filename('file')
-    # print(f"--TXTAI-- ids: {ids}")
-    # embedd.delete_ids([3])
-    # embedd.save_index("index.txtai")
-    print(embedd.search("select * from txtai where filename in ('file') and similar('savings account') and score >= 0.15"))
-
-    docs_to_update = embedd.search("select * from txtai where id = 1")
-    docs_to_update = embedd.update_documents_text(docs_to_update, ['deposit into bank'])
-
-    embedd.upsert_index(docs_to_update)
-
-    
-    # print(embedd.search("select * from txtai where filename in ('file') and similar('savings account') and score >= 0.15"))
-
-    all = embedd.search("select * from txtai limit 100")
-    [print(f"{doc['id']} {doc['text']}") for doc in all]
-
-
-def process_top_documents(top_documents, query):
-    embedd = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
-    embedd.create_index(top_documents)
-    return embedd.search(query)
-
-def process(data, query):
-    embedd = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
-    index = embedd.load_index('mdtest.txtai')
-
-    if not index:
-        embedd.create_index(data)
-        embedd.save_index("mdtest.txtai")
-    
-    return embedd.search(f"select * from txtai where similar('{query}') and score >= 0.01")
-
-
-if __name__ == "__main__":
-    main()
