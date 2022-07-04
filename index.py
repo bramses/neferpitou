@@ -14,9 +14,10 @@ INSERT_TEST = False
 FILES_FETCH_TEST = False
 SEARCH_TEST = True
 TOP_DOC_CHUNK_LENGTH = 400
+FIRST_PASS_DOC_CHUNK_LENGTH = 7000
 
-SCORE_THRESHOLD = 0.15
-qry = "hanoi is the capital of"
+SCORE_THRESHOLD = 0.25
+qry = "staying late at the office to work"
 
 def fetch_files(path):
     '''
@@ -92,7 +93,7 @@ def upsert_file(filename, embedding_instance: EmbeddingsWrapper = None, index_na
         print("Embedding instance not found")
         return False
 
-    doc = Document(filename=filename, chunk_length=7500)
+    doc = Document(filename=filename, chunk_length=FIRST_PASS_DOC_CHUNK_LENGTH)
     ids = embedding_instance.find_ids_by_filename(filename)
     deleted = delete_ids([i['id'] for i in ids], index_name=index_name, embedding_instance=embedding_instance)
     print(f"Deleted ids: {deleted}")
@@ -114,6 +115,10 @@ def delete_ids (ids, index_name=INDEX_NAME, embedding_instance: EmbeddingsWrappe
     if not embedding_instance:
         print("Embedding instance not found")
         return False
+
+    if len(ids) == 0:
+        print("No ids to delete")
+        return False
     
     ids = embedding_instance.delete_ids(ids)
     embedding_instance.save_index(index_name)
@@ -125,13 +130,13 @@ def main(data = []):
     embedding_instance = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
     index = embedding_instance.load_index(INDEX_NAME)
 
-    if not index and not INSERT_TEST:
+    if not index and not (INSERT_TEST or FILES_FETCH_TEST):
         print("Index not found -- cannot run tests")
         return False
 
     if INSERT_TEST:
-        doc = Document(filename='./files/daily.md', chunk_length=7500)
-        doc2 = Document(filename='./files/The lens through which your brain views the world shapes your reality.md', chunk_length=7500)
+        doc = Document(filename='./files/daily.md', chunk_length=FIRST_PASS_DOC_CHUNK_LENGTH)
+        doc2 = Document(filename='./files/The lens through which your brain views the world shapes your reality.md', chunk_length=FIRST_PASS_DOC_CHUNK_LENGTH)
         joined = doc.txtai_formatted_chunks + doc2.txtai_formatted_chunks
 
         if not index:
@@ -140,7 +145,7 @@ def main(data = []):
             embedding_instance.save_index(INDEX_NAME)
 
     if UPSERT_TEST:
-        doc3 = Document(filename='./files/daily2.md', chunk_length=7500)
+        doc3 = Document(filename='./files/daily2.md', chunk_length=FIRST_PASS_DOC_CHUNK_LENGTH)
         upsert(doc3.txtai_formatted_chunks, embedding_instance, INDEX_NAME)
     
     if SEARCH_TEST:
@@ -162,10 +167,12 @@ def main(data = []):
 
         print('--TEST RESULT--')
         pp.pprint(top_blurbs)
+        # print(f"filenames: {embedding_instance.list_filenames()})")
+
 
     if FILES_FETCH_TEST:
-        PATH = './files/Readwise/Tweets'
-        files = fetch_files(PATH)[:20]
+        PATH = './files/Readwise/Books'
+        files = fetch_files(PATH)[:3]
 
         for file in files:
             upsert_file(PATH + '/' + file, embedding_instance)
@@ -173,40 +180,3 @@ def main(data = []):
 
 if __name__ == "__main__":
     main()
-
-
-def local_test():
-    data = [{ "text": "US tops 5 million confirmed virus cases", "filename": 'file1' },
-         { "text": "Canada's last fully intact ice shelf has suddenly collapsed, forming a Manhattan-sized iceberg", "filename": 'file' },
-         { "text": "Beijing mobilises invasion craft along coast as Taiwan tensions escalate", "filename": 'file1' },
-         { "text": "The National Park Service warns against sacrificing slower friends in a bear attack", "filename": 'file' },
-         { "text": "Maine man wins $10M from $25 lottery ticket", "filename": 'file' },
-         { "text": "Make huge profits without work, earn up to $100,000 a day", "filename": 'file' }]
-    
-
-    
-    embedd = EmbeddingsWrapper(transform=openai_helper.transform, DEBUG=True)
-    index = embedd.load_index('index.txtai')
-
-    if not index:
-        embedd.create_index(data)
-        embedd.save_index("index.txtai")
-
-    # embedd.info()
-
-    # ids = embedd.find_ids_by_filename('file')
-    # print(f"--TXTAI-- ids: {ids}")
-    # embedd.delete_ids([3])
-    # embedd.save_index("index.txtai")
-    print(embedd.search("select * from txtai where filename in ('file') and similar('savings account') and score >= 0.15"))
-
-    docs_to_update = embedd.search("select * from txtai where id = 1")
-    docs_to_update = embedd.update_documents_text(docs_to_update, ['deposit into bank'])
-
-    embedd.upsert_index(docs_to_update)
-
-    
-    # print(embedd.search("select * from txtai where filename in ('file') and similar('savings account') and score >= 0.15"))
-
-    all = embedd.search("select * from txtai limit 100")
-    [print(f"{doc['id']} {doc['text']}") for doc in all]

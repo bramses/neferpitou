@@ -67,6 +67,12 @@ class EmbeddingsWrapper:
             print(f"--TXTAI-- deleting ids {ids}")
         return self.embeddings.delete(ids)
 
+    def list_filenames(self):
+        # todo: implement
+        if self.debug:
+            print(f"--TXTAI-- listing filenames")
+        return self.embeddings.search("SELECT count(filename) FROM txtai")
+
     def find_ids_by_filename(self, filename):
         if self.debug:
             print(f"--TXTAI-- finding ids by filename {filename}")
