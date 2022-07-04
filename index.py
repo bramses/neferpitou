@@ -15,9 +15,10 @@ FILES_FETCH_TEST = False
 SEARCH_TEST = True
 TOP_DOC_CHUNK_LENGTH = 400
 FIRST_PASS_DOC_CHUNK_LENGTH = 7000
+PATH = './files/Readwise/Articles'
 
 SCORE_THRESHOLD = 0.25
-qry = "staying late at the office to work"
+qry = "The largest subs see from 1 to 3 of uniques comment per month."
 
 def fetch_files(path):
     '''
@@ -151,6 +152,7 @@ def main(data = []):
     
     if SEARCH_TEST:
     
+
         search_res = search(qry, embedding_instance, n=3)
 
         filenames = set()
@@ -170,10 +172,12 @@ def main(data = []):
         pp.pprint(top_blurbs)
         # print(f"filenames: {embedding_instance.list_filenames()})")
 
+        print('files stored:' + str(fetch_files(PATH)[0:6]))
+
 
     if FILES_FETCH_TEST:
-        PATH = './files/Readwise/Books'
-        files = fetch_files(PATH)[:3]
+        files = fetch_files(PATH)[0:6]
+
 
         for file in files:
             upsert_file(PATH + '/' + file, embedding_instance)
