@@ -18,7 +18,7 @@ def transform(inputs, DEBUG=True):
     
     response = openai.Embedding.create(
         input=clean_inputs,
-        engine="text-search-ada-doc-001"
+        engine="text-search-curie-doc-001"
     )
 
     if DEBUG:
@@ -37,7 +37,7 @@ def transform_query(inputs, DEBUG=True):
 
     response = openai.Embedding.create(
         input=clean_inputs,
-        engine="text-search-ada-query-001"
+        engine="text-search-curie-query-001"
     )
 
     if DEBUG:

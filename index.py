@@ -13,12 +13,16 @@ DELETE_TEST = False
 INSERT_TEST = False
 FILES_FETCH_TEST = False
 SEARCH_TEST = True
+
+if sum([UPSERT_TEST,DELETE_TEST,INSERT_TEST,FILES_FETCH_TEST, SEARCH_TEST]) > 1:
+    raise Exception("Please specify at most one test.")
+
 TOP_DOC_CHUNK_LENGTH = 400
 FIRST_PASS_DOC_CHUNK_LENGTH = 7000
-PATH = './files/Readwise/Articles'
+PATH = './files/Readwise/Books'
 
 SCORE_THRESHOLD = 0.25
-qry = "The largest subs see from 1 to 3 of uniques comment per month."
+qry = "who posts on the internet the most"
 
 def fetch_files(path):
     '''
@@ -178,6 +182,10 @@ def main(data = []):
     if FILES_FETCH_TEST:
         files = fetch_files(PATH)[0:6]
 
+        if not index:
+            print(f"Index {INDEX_NAME} not found")
+            # index = embedding_instance.create_index([])
+            # embedding_instance.save_index(INDEX_NAME)
 
         for file in files:
             upsert_file(PATH + '/' + file, embedding_instance)

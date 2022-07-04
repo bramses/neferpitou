@@ -1,5 +1,4 @@
 .env
 *.pyc
 files
-mdtest.txtai
-mdtesty.txtai
+mdtest*.txtai
