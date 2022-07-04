@@ -95,8 +95,7 @@ def upsert_file(filename, embedding_instance: EmbeddingsWrapper = None, index_na
 
     doc = Document(filename=filename, chunk_length=FIRST_PASS_DOC_CHUNK_LENGTH)
     ids = embedding_instance.find_ids_by_filename(filename)
-    deleted = delete_ids([i['id'] for i in ids], index_name=index_name, embedding_instance=embedding_instance)
-    print(f"Deleted ids: {deleted}")
+    delete_ids([i['id'] for i in ids], index_name=index_name, embedding_instance=embedding_instance)
     upsert(doc.txtai_formatted_chunks, embedding_instance, INDEX_NAME)
  
 def upsert(new_data, embedding_instance: EmbeddingsWrapper = None, index_name=INDEX_NAME):
@@ -121,6 +120,8 @@ def delete_ids (ids, index_name=INDEX_NAME, embedding_instance: EmbeddingsWrappe
         return False
     
     ids = embedding_instance.delete_ids(ids)
+    print(f"Deleted ids: {ids}")
+
     embedding_instance.save_index(index_name)
     return ids
 
