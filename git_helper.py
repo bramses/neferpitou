@@ -9,13 +9,18 @@
 
 # do not reindex the entire index every time a file is added
 # do not clone the entire repo every time a file is added
-import filecmp
-import pathlib
+import requests
+import os
+from dotenv import load_dotenv
+from pprint import pprint
 
-ALLOWED_EXTENSIONS = ['md']
+load_dotenv()
 
-cmpr = filecmp.dircmp(pathlib.Path('./tests').resolve(), pathlib.Path('./tests').resolve())
-print(cmpr.common)
-
-# get path of ./tests
-tests = pathlib.Path('./tests').resolve()
+token = os.getenv("GITHUB_TOKEN")
+owner = os.getenv("GITHUB_OWNER")
+repo = os.getenv("GITHUB_REPO")
+query_url = f"https://api.github.com/repos/{owner}/{repo}/contents/src/extension.ts"
+params = {}
+headers = {'Authorization': f'token {token}'}
+r = requests.get(query_url, headers=headers, params=params)
+pprint(r.json())
