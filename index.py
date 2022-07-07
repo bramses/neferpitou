@@ -12,9 +12,10 @@ UPSERT_TEST = False
 DELETE_TEST = False
 INSERT_TEST = False
 FILES_FETCH_TEST = False
-SEARCH_TEST = True
+SEARCH_TEST = False
+LIST_FILENAMES_TEST = True
 
-if sum([UPSERT_TEST,DELETE_TEST,INSERT_TEST,FILES_FETCH_TEST, SEARCH_TEST]) > 1:
+if sum([UPSERT_TEST,DELETE_TEST,INSERT_TEST,FILES_FETCH_TEST, SEARCH_TEST, LIST_FILENAMES_TEST]) > 1:
     raise Exception("Please specify at most one test.")
 
 TOP_DOC_CHUNK_LENGTH = 400
@@ -22,7 +23,7 @@ FIRST_PASS_DOC_CHUNK_LENGTH = 7000
 PATH = './files/Readwise/Books'
 
 SCORE_THRESHOLD = 0.25
-qry = "who posts on the internet the most"
+qry = "github!"
 
 def fetch_files(path):
     '''
@@ -178,7 +179,6 @@ def main(data = []):
 
         print('files stored:' + str(fetch_files(PATH)[0:6]))
 
-
     if FILES_FETCH_TEST:
         files = fetch_files(PATH)[0:6]
 
@@ -189,7 +189,9 @@ def main(data = []):
 
         for file in files:
             upsert_file(PATH + '/' + file, embedding_instance)
-    
+
+    if LIST_FILENAMES_TEST:
+        print(f"filenames: {embedding_instance.list_filenames()})")
 
 if __name__ == "__main__":
     main()

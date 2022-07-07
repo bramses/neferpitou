@@ -68,10 +68,28 @@ class EmbeddingsWrapper:
         return self.embeddings.delete(ids)
 
     def list_filenames(self):
-        # todo: implement
+        # this method (SELECT DISTINCT) is not implemented in txtai -- so it may break
         if self.debug:
             print(f"--TXTAI-- listing filenames")
-        return self.embeddings.search("SELECT count(filename) FROM txtai")
+        
+        count = len(self.embeddings.search(f"SELECT count(*) FROM txtai"))
+        files = set()
+        if count > self.limit:
+            # paginate with offset
+            offset = 0
+            while True:
+                search_results = self.embeddings.search(f"SELECT filename FROM txtai limit {self.limit} offset {offset}")
+                for result in search_results:
+                    files.add(result['filename'])
+                offset += self.limit
+                if len(search_results) < self.limit:
+                    break
+        else:
+            search_results = self.embeddings.search(f"SELECT filename FROM txtai limit {self.limit}")
+            for result in search_results:
+                files.add(result['filename'])
+
+        return files
 
     def find_ids_by_filename(self, filename):
         if self.debug:
