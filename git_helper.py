@@ -19,8 +19,38 @@ load_dotenv()
 token = os.getenv("GITHUB_TOKEN")
 owner = os.getenv("GITHUB_OWNER")
 repo = os.getenv("GITHUB_REPO")
-query_url = f"https://api.github.com/repos/{owner}/{repo}/contents/src/extension.ts"
-params = {}
-headers = {'Authorization': f'token {token}'}
-r = requests.get(query_url, headers=headers, params=params)
-pprint(r.json())
+
+def base():
+    query_url = f"https://api.github.com/repos/{owner}/{repo}/contents"
+    params = {}
+    headers = {'Authorization': f'token {token}'}
+    r = requests.get(query_url, headers=headers, params=params)
+    pprint(r.json())
+
+def tree():
+    url = "https://api.github.com/repos/{}/{}/git/trees/master?recursive=1".format(owner, repo)
+    print(url)
+    params = {}
+
+    headers = {'Authorization': f'token {token}'}
+    r = requests.get(url, headers=headers, params=params)
+    res = r.json()
+
+    for file in res["tree"]:
+        print(file["path"])
+
+def sha():
+    url = "https://api.github.com/repos/{}/{}/branches/master".format(owner, repo)
+    params = {}
+
+    print(url)
+    headers = {'Authorization': f'token {token}'}
+    r = requests.get(url, headers=headers, params=params)
+    res = r.json()
+
+    print(res)
+    
+    head_tree_sha = res['commit']['tree']['sha']
+    print(head_tree_sha)
+
+tree()
